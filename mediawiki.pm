@@ -482,6 +482,8 @@ sub htmlize (@)
                  qw(del ins),	# These should have been added all along.
                  qw(span),	# Mediawiki allows span but that's rather scary...?
                  qw(a),		# this is unfortunate; should handle links after rendering the page.
+		 # also unfortunate
+		 qw(img)
                ],
 
 	    allowed_attrs   => [
@@ -499,6 +501,8 @@ sub htmlize (@)
                 qw(id class name style), # For CSS
                 # Our additions
                 qw(href),
+		# img tags
+		qw(src alt width height class)
                ],
 
 	   }, {
