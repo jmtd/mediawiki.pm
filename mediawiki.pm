@@ -402,8 +402,12 @@ sub linkify (@)
 		return IkiWiki::Plugin::link::linkify(@_);
 	}
 
-	my $redir = check_redirect(%params);
-	return $redir if defined $redir;
+	if ($page ne $destpage) {
+	    # inlining as in [[!inline]], so fall through
+	} else {
+	    my $redir = check_redirect(%params);
+	    return $redir if defined $redir;
+	};
 
 	# this code was copied from MediawikiFormat.pm.
 	# Heavily changed because MF.pm screws up escaping when it does
