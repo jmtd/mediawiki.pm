@@ -398,7 +398,7 @@ sub linkify (@)
 	my $type=pagetype($file);
 	my $counter = 1;
 
-	if($type ne 'mediawiki') {
+	if(!defined($type) || $type ne 'mediawiki') {
 		return IkiWiki::Plugin::link::linkify(@_);
 	}
 
