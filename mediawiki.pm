@@ -473,7 +473,7 @@ sub scan (@)
 		while(/$link_regexp/g) {
 			generate_internal_link($page, $1, '', '', '', sub {
 				my($linkpage, $linktext, $anchor) = @_;
-				push @{$links{$page}}, $linkpage;
+				add_link($page, $linkpage);
 				return undef;
 			});
 		}
