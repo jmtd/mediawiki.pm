@@ -59,7 +59,7 @@ sub import { #{{{
 
 sub checkconfig
 {
-	return IkiWiki::Plugin::link::checkconfig(@_);
+	return IkiWiki::Plugin::link::checkconfig();
 }
 
 
