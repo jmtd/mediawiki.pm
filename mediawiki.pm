@@ -6,14 +6,19 @@
 # - Install Text::MediawikiFormat
 # - Turn of prefix_directives in your setup file.
 #     (TODO: we probably don't need to do this anymore?)
-#        prefix_directives => 1,
+#        prefix_directives => 1
 # - Add this plugin on Ikiwiki's path (perl -V, look for @INC)
 #       cp mediawiki.pm something/IkiWiki/Plugin
-# - And enable it in your setup file
-#        add_plugins => [qw{mediawiki}],
+# - And enable it in your setup file:
+#        add_plugins:
+#        - goodstuff
+#        - websetup
+#        - mediawiki
 # - Finally, turn off the link plugin in setup (this is important)
-#        disable_plugins => [qw{link}],
+#        disable_plugins:
+#        - link
 # - Rebuild everything (actually, this should be automatic right?)
+#        ikiwiki --setup ~/wiki.setup
 # - Now all files with a .mediawiki extension should be rendered properly.
 
 
