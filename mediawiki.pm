@@ -29,6 +29,7 @@ use strict;
 use IkiWiki 2.00;
 use URI;
 
+use IkiWiki::Plugin::img;
 
 # This is a gross hack...  We disable the link plugin so that our
 # linkify routine is always called.  Then we call the link plugin
@@ -78,7 +79,7 @@ my $link_regexp = qr{
 
     (?:
         \|              # followed by '|'
-        ([^\]\|]*)      # 3: link text
+        ([^\]]*)        # 3: link text
     )?                  # optional
     \]\]                # end of link
         ([a-zA-Z]*)	# optional trailing alphas
@@ -276,6 +277,29 @@ sub generate_internal_link
 			&$proc(tagpage($linkpage), $linktext, $anchor);
 			return "";
 		}
+	} elsif($inlink =~ /^File\:(.*\.(gif|jpe?g|png))$/ix) {  # images
+		my($target) = ($1);
+		my %params = (page => $page, destpage => $page, preview => 0, link => ''); # defaults
+		# Parse mediawiki file options, as best as possilble.
+		# See http://www.mediawiki.org/wiki/Help:Images for the pain.
+		foreach (split(/\|/, defined($title) ? $title : '')) {
+		    if (/^([a-z]+)\=(.*)$/) {
+			my($arg, $value) = ($1, $2);
+			$value =~ s/^"(.*)"$/$1/;
+			$params{$arg} = $value;
+		    } elsif (/^(border|frameless|frame|thumb|thumbnail)$/) {
+		        warn "mediawiki image border $1 ignored\n";
+		    } elsif (/^(left|right|center|none)$/) {
+			$params{align} = $1;
+		    } elsif (/^(baseline|sub|super|top|text-top|middle|bottom|text-bottom)$/) {
+		        warn "mediawiki image valign $1 ignored\n";
+		    } elsif (/^(\d+px|x\d+px|\d+x\d+px|upright)$/) {
+		        warn "mediawiki $1 image sizing ignored\n";
+		    } else {
+			$params{caption} = $_;
+		    };
+		};
+		return IkiWiki::Plugin::img::preprocess($target, '', %params);
 	} else {
 		# It's just a regular link
 		$linkpage = IkiWiki::linkpage(translate_path($page, $inlink));
@@ -379,12 +403,16 @@ sub linkify (@)
 	my $type=pagetype($file);
 	my $counter = 1;
 
-	if($type ne 'mediawiki') {
+	if(!defined($type) || $type ne 'mediawiki') {
 		return IkiWiki::Plugin::link::linkify(@_);
 	}
 
-	my $redir = check_redirect(%params);
-	return $redir if defined $redir;
+	if ($page ne $destpage) {
+	    # inlining as in [[!inline]], so fall through
+	} else {
+	    my $redir = check_redirect(%params);
+	    return $redir if defined $redir;
+	};
 
 	# this code was copied from MediawikiFormat.pm.
 	# Heavily changed because MF.pm screws up escaping when it does
@@ -450,7 +478,7 @@ sub scan (@)
 		while(/$link_regexp/g) {
 			generate_internal_link($page, $1, '', '', '', sub {
 				my($linkpage, $linktext, $anchor) = @_;
-				push @{$links{$page}}, $linkpage;
+				add_link($page, $linkpage);
 				return undef;
 			});
 		}
@@ -487,6 +515,8 @@ sub htmlize (@)
                  qw(del ins),	# These should have been added all along.
                  qw(span),	# Mediawiki allows span but that's rather scary...?
                  qw(a),		# this is unfortunate; should handle links after rendering the page.
+		 # also unfortunate
+		 qw(img)  # this lets [[File:foo.png]] resolve correctly
                ],
 
 	    allowed_attrs   => [
@@ -504,6 +534,8 @@ sub htmlize (@)
                 qw(id class name style), # For CSS
                 # Our additions
                 qw(href),
+		# img tags
+		qw(alt title class id height hspace src vspace width) # xxx: hpspace, vspace are extensions on MediaWiki
                ],
 
 	   }, {
